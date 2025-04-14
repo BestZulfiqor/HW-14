@@ -1,14 +1,19 @@
 using Infrastructure.Data;
 using Infrastructure.Interfaces;
 using Infrastructure.Services;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models; 
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddControllers();
-builder.Services.AddScoped<IProductService, ProductService>();
-builder.Services.AddScoped<DataContext>();
+builder.Services.AddScoped<IBookService, BookService>();
+builder.Services.AddScoped<IAuthorService, AuthorService>();
+builder.Services.AddScoped<IBorrowRecordService, BorrowRecordService>();
+builder.Services.AddScoped<IMemberService, MemberService>();
+builder.Services.AddDbContext<DataContext>(options => 
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Добавьте регистрацию Swagger
 builder.Services.AddSwaggerGen(c =>
