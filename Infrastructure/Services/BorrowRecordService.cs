@@ -117,7 +117,18 @@ public class BorrowRecordService(DataContext context) : IBorrowRecordService
 
     public async Task<Response<List<GetBorrowRecordDto>>> GetOverdueBorrowRecord()
     {
-        throw new Exception();
+        var borrow = await context.BorrowRecords
+            .Where(n => DateTime.Now >= n.ReturnDate)
+            .Select(n => new GetBorrowRecordDto{
+                Id = n.Id,
+                BookId = n.BookId,
+                MemberId = n.MemberId,
+                ReturnDate = n.ReturnDate,
+                BorrowDate = n.BorrowDate
+            })
+            .ToListAsync();
+        
+        return new Response<List<GetBorrowRecordDto>>(borrow);
     }
 
     public async Task<Response<GetBorrowRecordDto>> UpdateBorrowRecord(int id, UpdateBorrowRecordDto recordDto)

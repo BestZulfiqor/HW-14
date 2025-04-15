@@ -1,9 +1,11 @@
 using System.Net;
+using Domain.Dtos;
 using Domain.Dtos.MemberDto;
 using Domain.Entities;
 using Domain.Responses;
 using Infrastructure.Data;
 using Infrastructure.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Services;
 
@@ -58,15 +60,18 @@ public class MemberService(DataContext context) : IMemberService
 
     public async Task<Response<string>> DeleteMember(int id)
     {
-        var exists = context.Members.Find(id);
-
+        var exists = await context.Members.FindAsync(id);
+        if (exists == null)
+        {
+            return new Response<string>("Not found member");
+        }
         context.Members.Remove(exists);
 
         var res = await context.SaveChangesAsync();
 
         return res == 0
-            ? new Response<string>(HttpStatusCode.BadRequest, "Did not delete")
-            : new Response<string>(HttpStatusCode.OK, "Member deleted");
+            ? new Response<string>(HttpStatusCode.BadRequest, "Member not delete")
+            : new Response<string>(HttpStatusCode.OK, "Member deleted succesfully");
     }
 
     public async Task<Response<GetMemberDto>> GetMember(int id)
@@ -87,13 +92,39 @@ public class MemberService(DataContext context) : IMemberService
         return new Response<GetMemberDto>(res);
     }
 
-    public Task<Response<List<GetMemberDto>>> GetMemberWithRecentBorrows(int days)
+    public async Task<Response<List<GetMemberBorrowDate>>> GetMemberWithRecentBorrows(int days)
     {
-        throw new Exception();
+        var members = await (
+            from member in context.Members
+            join borrow in context.BorrowRecords on member.Id equals borrow.MemberId
+            where borrow.BorrowDate.Day >= DateTime.Now.AddDays(-days).Day
+            select new GetMemberBorrowDate
+            {
+                Name = member.Name,
+                Email = member.Email,
+                BorrowDate = borrow.BorrowDate
+            }
+        ).ToListAsync();
+
+        return new Response<List<GetMemberBorrowDate>>(members);
     }
 
-    public Task<Response<List<GetMemberDto>>> GetTopNMemberByBorrows(int n)
+    public async Task<Response<List<GetMemberCountBook>>> GetTopNMemberByBorrows(int n)
     {
-        throw new Exception();
+        var members = await (
+            from member in context.Members
+            join borrow in context.BorrowRecords on member.Id equals borrow.MemberId
+            orderby member.BorrowRecords.Count descending
+            select new GetMemberCountBook
+            {
+                Name = member.Name,
+                Email = member.Email,
+                Count = member.BorrowRecords.Count
+            }
+        )
+        .Take(n)
+        .ToListAsync();
+
+        return new Response<List<GetMemberCountBook>>(members);
     }
 }

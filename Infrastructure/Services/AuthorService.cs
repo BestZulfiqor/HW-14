@@ -18,10 +18,10 @@ public class AuthorService(DataContext context) : IAuthorService
             Name = authorDto.Name,
             BirthDate = authorDto.BirthDate,
         };
-         
+
         await context.Authors.AddAsync(author);
         var res = await context.SaveChangesAsync();
-        
+
         var getAuthorDto = new GetAuthorDto()
         {
             Id = author.Id,
@@ -35,7 +35,7 @@ public class AuthorService(DataContext context) : IAuthorService
     }
 
     public async Task<Response<GetAuthorDto>> UpdateAuthorAsync(int id, UpdateAuthorDto authorDto)
-    { 
+    {
         var author = await context.Authors.FindAsync(id);
         if (author == null)
         {
@@ -43,7 +43,7 @@ public class AuthorService(DataContext context) : IAuthorService
         }
         author.Name = authorDto.Name;
         author.BirthDate = authorDto.BirthDate;
-        
+
         var res = await context.SaveChangesAsync();
 
         var resDto = new GetAuthorDto()
@@ -52,8 +52,8 @@ public class AuthorService(DataContext context) : IAuthorService
             Name = authorDto.Name,
             BirthDate = authorDto.BirthDate,
         };
-        
-        return res == 0 
+
+        return res == 0
             ? new Response<GetAuthorDto>(HttpStatusCode.BadRequest, "Author not added!")
             : new Response<GetAuthorDto>(resDto);
     }
@@ -61,7 +61,7 @@ public class AuthorService(DataContext context) : IAuthorService
     public async Task<Response<string>> DeleteAuthorAsync(int id)
     {
         var exist = await context.Authors.FindAsync(id);
-        
+
         if (exist == null)
         {
             return new Response<string>(HttpStatusCode.BadRequest, "Author not found");
@@ -72,7 +72,7 @@ public class AuthorService(DataContext context) : IAuthorService
         return result == 0
             ? new Response<string>(HttpStatusCode.BadRequest, "Author not deleted!")
             : new Response<string>("Author deleted!");
-        
+
     }
 
     public async Task<Response<GetAuthorDto>> GetAuthorAsync(int id)
@@ -93,17 +93,21 @@ public class AuthorService(DataContext context) : IAuthorService
         return new Response<GetAuthorDto>(book);
     }
 
-    public async Task<Response<List<GetAuthorsWithMostBooksDto>>> GetAuthorsWithMostBooksAsync(int count)
+    public async Task<Response<List<GetAuthorsWithMostBooksDto>>> GetAuthorsWithMostBooksAsync()
     {
-        var authors = await context.Authors.Select(a => new GetAuthorsWithMostBooksDto()
+        var maxAuthors = await context.Authors
+            .MaxAsync(n => n.Books.Count);
+        var authors = await context.Authors
+            .Where(n => n.Books.Count == maxAuthors)
+            .Select(n => new GetAuthorsWithMostBooksDto()
             {
-                Id = a.Id,
-                Name = a.Name,
-                BirthDate = a.BirthDate,
-                Count = a.Books.Count,
-            }
-        ).ToListAsync();
-
+                Id = n.Id,
+                Name = n.Name,
+                BirthDate = n.BirthDate,
+                Count = n.Books.Count
+            })
+            .ToListAsync();
+        
         return new Response<List<GetAuthorsWithMostBooksDto>>(authors);
     }
 }
