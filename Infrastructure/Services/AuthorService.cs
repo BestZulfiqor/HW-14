@@ -1,4 +1,5 @@
 using System.Net;
+using AutoMapper;
 using Domain.Dtos;
 using Domain.Dtos.AuthorDto;
 using Domain.Entities;
@@ -9,26 +10,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Services;
 
-public class AuthorService(DataContext context) : IAuthorService
+public class AuthorService(DataContext context, IMapper mapper) : IAuthorService
 {
     public async Task<Response<GetAuthorDto>> AddAuthorAsync(CreateAuthorDto authorDto)
     {
-        var author = new Author()
-        {
-            Name = authorDto.Name,
-            BirthDate = authorDto.BirthDate,
-        };
+        var author = mapper.Map<Author>(authorDto);
 
         await context.Authors.AddAsync(author);
         var res = await context.SaveChangesAsync();
 
-        var getAuthorDto = new GetAuthorDto()
-        {
-            Id = author.Id,
-            Name = authorDto.Name,
-            BirthDate = authorDto.BirthDate,
-        };
-
+        var getAuthorDto = mapper.Map<GetAuthorDto>(author);
         return res == 0
             ? new Response<GetAuthorDto>(HttpStatusCode.BadRequest, "Author not added!")
             : new Response<GetAuthorDto>(getAuthorDto);
@@ -46,16 +37,11 @@ public class AuthorService(DataContext context) : IAuthorService
 
         var res = await context.SaveChangesAsync();
 
-        var resDto = new GetAuthorDto()
-        {
-            Id = author.Id,
-            Name = authorDto.Name,
-            BirthDate = authorDto.BirthDate,
-        };
+        var update = mapper.Map<GetAuthorDto>(author);
 
         return res == 0
             ? new Response<GetAuthorDto>(HttpStatusCode.BadRequest, "Author not added!")
-            : new Response<GetAuthorDto>(resDto);
+            : new Response<GetAuthorDto>(update);
     }
 
     public async Task<Response<string>> DeleteAuthorAsync(int id)
@@ -82,15 +68,9 @@ public class AuthorService(DataContext context) : IAuthorService
         {
             return new Response<GetAuthorDto>(HttpStatusCode.NotFound, "Author not found!");
         }
+        var getAuthorDto = mapper.Map<GetAuthorDto>(exist);
 
-        var book = new GetAuthorDto()
-        {
-            Id = exist.Id,
-            Name = exist.Name,
-            BirthDate = exist.BirthDate,
-        };
-
-        return new Response<GetAuthorDto>(book);
+        return new Response<GetAuthorDto>(getAuthorDto);
     }
 
     public async Task<Response<List<GetAuthorsWithMostBooksDto>>> GetAuthorsWithMostBooksAsync()
@@ -99,15 +79,8 @@ public class AuthorService(DataContext context) : IAuthorService
             .MaxAsync(n => n.Books.Count);
         var authors = await context.Authors
             .Where(n => n.Books.Count == maxAuthors)
-            .Select(n => new GetAuthorsWithMostBooksDto()
-            {
-                Id = n.Id,
-                Name = n.Name,
-                BirthDate = n.BirthDate,
-                Count = n.Books.Count
-            })
             .ToListAsync();
-        
-        return new Response<List<GetAuthorsWithMostBooksDto>>(authors);
+        var data = mapper.Map<List<GetAuthorsWithMostBooksDto>>(authors);
+        return new Response<List<GetAuthorsWithMostBooksDto>>(data);
     }
 }

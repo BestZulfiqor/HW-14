@@ -1,3 +1,4 @@
+using Infrastructure.AutoMapper;
 using Infrastructure.Data;
 using Infrastructure.Interfaces;
 using Infrastructure.Services;
@@ -14,7 +15,7 @@ builder.Services.AddScoped<IBorrowRecordService, BorrowRecordService>();
 builder.Services.AddScoped<IMemberService, MemberService>();
 builder.Services.AddDbContext<DataContext>(options => 
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
+builder.Services.AddAutoMapper(typeof(InfrastructureProfile));
 // Добавьте регистрацию Swagger
 builder.Services.AddSwaggerGen(c =>
 {

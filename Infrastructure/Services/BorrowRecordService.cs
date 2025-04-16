@@ -1,4 +1,5 @@
 using System.Net;
+using AutoMapper;
 using Domain.Dtos.BorrowRecordDto;
 using Domain.Entities;
 using Domain.Responses;
@@ -8,28 +9,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Services;
 
-public class BorrowRecordService(DataContext context) : IBorrowRecordService
+public class BorrowRecordService(DataContext context, IMapper mapper) : IBorrowRecordService
 {
     public async Task<Response<GetBorrowRecordDto>> AddBorrowRecord(CreateBorrowRecordDto recordDto)
     {
-        var borrow = new BorrowRecord()
-        {
-            MemberId = recordDto.MemberId,
-            BookId = recordDto.BookId,
-            BorrowDate = recordDto.BorrowDate,
-            ReturnDate = recordDto.ReturnDate
-        };
+        var borrow = mapper.Map<BorrowRecord>(recordDto);
 
         await context.BorrowRecords.AddAsync(borrow);
         var result = await context.SaveChangesAsync();
-        var getBorrow = new GetBorrowRecordDto()
-        {
-            Id = borrow.Id,
-            MemberId = recordDto.MemberId,
-            BookId = recordDto.BookId,
-            BorrowDate = recordDto.BorrowDate,
-            ReturnDate = recordDto.ReturnDate
-        };
+        var getBorrow = mapper.Map<GetBorrowRecordDto>(borrow);
 
         return result == 0
             ? new Response<GetBorrowRecordDto>(HttpStatusCode.BadRequest, "Borrow not added!")
@@ -58,19 +46,13 @@ public class BorrowRecordService(DataContext context) : IBorrowRecordService
         {
             return new Response<List<GetBorrowRecordDto>>(HttpStatusCode.NotFound, "Book not found");
         }
+
         var borrows = await context.BorrowRecords
             .Where(n => n.BookId == bookId)
-            .Select(n => new GetBorrowRecordDto()
-            {
-                Id = n.Id,
-                MemberId = n.MemberId,
-                BookId = n.BookId,
-                BorrowDate = n.BorrowDate,
-                ReturnDate = n.ReturnDate
-            })
             .ToListAsync();
+        var data = mapper.Map<List<GetBorrowRecordDto>>(borrows);
 
-        return new Response<List<GetBorrowRecordDto>>(borrows);
+        return new Response<List<GetBorrowRecordDto>>(data);
     }
 
     public async Task<Response<List<GetBorrowRecordDto>>> GetBorrowHistoryByMember(int memberId)

@@ -1,4 +1,5 @@
 using System.Net;
+using AutoMapper;
 using Domain.Dtos;
 using Domain.Dtos.MemberDto;
 using Domain.Entities;
@@ -9,24 +10,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Services;
 
-public class MemberService(DataContext context) : IMemberService
+public class MemberService(DataContext context, IMapper mapper) : IMemberService
 {
     public async Task<Response<GetMemberDto>> AddMember(CreateMemberDto memberDto)
     {
-        var memberdto = new Member()
-        {
-            Name = memberDto.Name,
-            Email = memberDto.Email,
-        };
+        var member = mapper.Map<Member>(memberDto);
 
-        await context.Members.AddAsync(memberdto);
+        await context.Members.AddAsync(member);
         var res = await context.SaveChangesAsync();
 
-        var get = new GetMemberDto()
-        {
-            Email = memberDto.Email,
-            Name = memberDto.Name,
-        };
+        var get = mapper.Map<GetMemberDto>(member);
 
         return res == 0
             ? new Response<GetMemberDto>(HttpStatusCode.BadRequest, "Not added")
@@ -48,14 +41,10 @@ public class MemberService(DataContext context) : IMemberService
 
         var res = await context.SaveChangesAsync();
 
-        var result = new GetMemberDto()
-        {
-            Email = memberDto.Email,
-            Name = memberDto.Name,
-        };
-
-        return new Response<GetMemberDto>(result);
-
+        var update = mapper.Map<GetMemberDto>(member);
+        return res == 0
+            ? new Response<GetMemberDto>(HttpStatusCode.BadRequest, "Member not updated")
+            : new Response<GetMemberDto>(update);
     }
 
     public async Task<Response<string>> DeleteMember(int id)
@@ -83,13 +72,9 @@ public class MemberService(DataContext context) : IMemberService
             return new Response<GetMemberDto>(HttpStatusCode.NotFound, "Member not found");
         }
 
-        var res = new GetMemberDto()
-        {
-            Email = member.Email,
-            Name = member.Name,
-        };
+        var getMemberDto = mapper.Map<GetMemberDto>(member);
 
-        return new Response<GetMemberDto>(res);
+        return new Response<GetMemberDto>(getMemberDto);
     }
 
     public async Task<Response<List<GetMemberBorrowDate>>> GetMemberWithRecentBorrows(int days)

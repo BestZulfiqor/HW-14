@@ -1,4 +1,5 @@
 using System.Net;
+using AutoMapper;
 using Domain.Dtos.BookDto;
 using Domain.Entities;
 using Domain.Responses;
@@ -8,28 +9,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Services;
 
-public class BookService(DataContext context) : IBookService
+public class BookService(DataContext context, IMapper mapper) : IBookService
 {
     public async Task<Response<GetBookDto>> AddBook(CreateBookDto bookDto)
     {
-        var book = new Book()
-        {
-            AuthorId = bookDto.AuthorId,
-            Title = bookDto.Title,
-            Genre = bookDto.Genre,
-            PublishedDate = bookDto.PublishedDate
-        };
+        var book = mapper.Map<Book>(bookDto);
 
         await context.Books.AddAsync(book);
         var result = await context.SaveChangesAsync();
-        var getBookDto = new GetBookDto()
-        {
-            Id = book.Id,
-            AuthorId = book.AuthorId,
-            Genre = book.Genre,
-            PublishedDate = book.PublishedDate,
-            Title = book.Title
-        };
+        var getBookDto = mapper.Map<GetBookDto>(book);
 
         return result == 0
             ? new Response<GetBookDto>(HttpStatusCode.BadRequest, "Book not added!")
@@ -64,14 +52,7 @@ public class BookService(DataContext context) : IBookService
         exist.PublishedDate = bookDto.PublishedDate;
         exist.Title = bookDto.Title;
         var result = await context.SaveChangesAsync();
-        var book = new GetBookDto()
-        {
-            Id = exist.Id,
-            AuthorId = exist.AuthorId,
-            Title = exist.Title,
-            Genre = exist.Genre,
-            PublishedDate = exist.PublishedDate
-        };
+        var book = mapper.Map<GetBookDto>(exist);
 
         return result == 0
             ? new Response<GetBookDto>(HttpStatusCode.BadRequest, "Book not updated")
@@ -84,15 +65,7 @@ public class BookService(DataContext context) : IBookService
         {
             return new Response<GetBookDto>(HttpStatusCode.NotFound, "Book not found!");
         }
-
-        var book = new GetBookDto()
-        {
-            Id = exist.Id,
-            AuthorId = exist.AuthorId,
-            Title = exist.Title,
-            Genre = exist.Genre,
-            PublishedDate = exist.PublishedDate
-        };
+        var book = mapper.Map<GetBookDto>(exist);
 
         return new Response<GetBookDto>(book);
     }
@@ -101,47 +74,28 @@ public class BookService(DataContext context) : IBookService
     {
         var books = await context.Books
             .Where(n => n.Author.Name == name)
-            .Select(n => new GetBookDto()
-            {
-                Id = n.Id,
-                Title = n.Title,
-                Genre = n.Genre,
-                PublishedDate = n.PublishedDate,
-                AuthorId = n.AuthorId
-            })
             .ToListAsync();
-        return new Response<List<GetBookDto>>(books);
+        
+        var data = mapper.Map<List<GetBookDto>>(books);
+        return new Response<List<GetBookDto>>(data);
     }
 
     public async Task<Response<List<GetBookDto>>> GetBookByGenre(string genre)
     {
         var books = await context.Books
             .Where(n => n.Genre == genre)
-            .Select(n => new GetBookDto()
-            {
-                Id = n.Id,
-                Title = n.Title,
-                Genre = n.Genre,
-                PublishedDate = n.PublishedDate,
-                AuthorId = n.AuthorId
-            })
             .ToListAsync();
-        return new Response<List<GetBookDto>>(books);
+        var bookDto = mapper.Map<List<GetBookDto>>(books);
+        return new Response<List<GetBookDto>>(bookDto);
     }
 
     public async Task<Response<List<GetBookDto>>> GetRecentlyPublishedBooks(int years)
     {
         var books = await context.Books
             .Where(n => n.PublishedDate.Year >= DateTime.Now.AddYears(-years).Year)
-            .Select(n => new GetBookDto()
-            {
-                Id = n.Id,
-                Title = n.Title,
-                Genre = n.Genre,
-                PublishedDate = n.PublishedDate,
-                AuthorId = n.AuthorId
-            })
             .ToListAsync();
-        return new Response<List<GetBookDto>>(books);
+
+        var data = mapper.Map<List<GetBookDto>>(books);
+        return new Response<List<GetBookDto>>(data);
     }
 }
