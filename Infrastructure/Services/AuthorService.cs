@@ -73,6 +73,15 @@ public class AuthorService(DataContext context, IMapper mapper) : IAuthorService
         return new Response<GetAuthorDto>(getAuthorDto);
     }
 
+    public async Task<Response<List<GetAuthorDto>>> GetAuthorsAsync()
+    {
+        var authors = await context.Authors.ToListAsync();
+
+        var data = mapper.Map<List<GetAuthorDto>>(authors);
+
+        return new Response<List<GetAuthorDto>>(data);
+    }
+
     public async Task<Response<List<GetAuthorsWithMostBooksDto>>> GetAuthorsWithMostBooksAsync()
     {
         var maxAuthors = await context.Authors

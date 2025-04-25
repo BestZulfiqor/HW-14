@@ -6,6 +6,7 @@ namespace Infrastructure.Interfaces;
 
 public interface IAuthorService
 {
+    Task<Response<List<GetAuthorDto>>> GetAuthorsAsync();
     Task<Response<GetAuthorDto>> AddAuthorAsync(CreateAuthorDto authorDto);
     Task<Response<GetAuthorDto>> UpdateAuthorAsync(int id, UpdateAuthorDto authorDto);
     Task<Response<string>> DeleteAuthorAsync(int id);

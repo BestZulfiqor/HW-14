@@ -1,0 +1,30 @@
+@page
+@model RazorApp.Pages.Authors.Index
+
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th scope="col">#</th>
+        <th scope="col">First name</th>
+        <th scope="col">Birthdate</th>
+        <th scope="col">Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    @{
+        var count = 1;
+    }
+    @foreach (var author in Model.Authors)
+    {
+        <tr>
+            <th scope="row">@(count++)</th>
+            <td>@author.Name.Split(' ')[0]</td>
+            <td>@author.BirthDate.ToString("dd-MM-yyyy")</td>
+            <td>
+                <a asp-page="./Edit" asp-route-id="@author.Id" class="btn btn-primary btn-sm">Edit</a>
+                <a asp-page="./Delete" asp-route-id="@author.Id" class="btn btn-danger btn-sm">Delete</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

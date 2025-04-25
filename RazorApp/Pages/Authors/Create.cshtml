@@ -1,0 +1,24 @@
+@page
+@model RazorApp.Pages.Authors.Create
+
+<form method="post">
+    <div class="form-group">
+        <label for="Name">Name</label>
+        <input asp-for="CreateAuthorDto.Name" type="text" class="form-control" id="Name" placeholder="Enter name">
+        <span asp-validation-for="CreateAuthorDto.Name"></span>
+    </div>
+    <div class="form-group">
+        <label for="birthdate">Birthdate</label>
+        <input asp-for="CreateAuthorDto.BirthDate" type="date" class="form-control" id="birthdate"
+            placeholder="Enter birthdate">
+        <span asp-validation-for="CreateAuthorDto.BirthDate"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+
+<div style="text-align: center;">
+    @foreach (var message in Model.Messages)
+    {
+        <marquee>@message</marquee>
+    }
+</div>
