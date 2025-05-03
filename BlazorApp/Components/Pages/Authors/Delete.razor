@@ -1,0 +1,66 @@
+﻿@page "/authors/delete/{id:int}"
+@using Domain.Dtos.AuthorDto
+@using Infrastructure.Interfaces
+@inject NavigationManager Navigation
+@inject IAuthorService AuthorService
+@rendermode InteractiveServer
+
+<h3>Delete author</h3>
+
+<div class="card shadow rounded-4 p-4" style="max-width: 500px;">
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    <p><strong>Name:</strong> @author.Name</p>
+    <p><strong>Birth Date:</strong> @author.BirthDate.ToShortDateString()</p>
+
+    <div class="d-flex justify-content-between">
+        <button class="btn btn-danger mb-4" @onclick="HandleDelete">
+            Delete
+        </button>
+        <button class="btn btn-secondary mb-4" @onclick="@(() => Navigation.NavigateTo("/authors"))">
+            Cancel
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private GetAuthorDto author = new();
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await AuthorService.GetAuthorAsync(Id);
+        if (response.Data == null)
+        {
+            errorMessage = "Author not found.";
+            return;
+        }
+
+        author = response.Data;
+    }
+
+    private async Task HandleDelete()
+    {
+        try
+        {
+            var response = await AuthorService.DeleteAuthorAsync(author.Id);
+            if (!response.IsSuccess)
+            {
+                errorMessage = response.Message!;
+                return;
+            }
+
+            Navigation.NavigateTo("/authors");
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            errorMessage = "Unexpected error occurred while deleting author.";
+        }
+    }
+}

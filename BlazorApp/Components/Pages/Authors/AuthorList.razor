@@ -1,0 +1,66 @@
+﻿@page "/authors"
+@using Domain.Dtos.AuthorDto
+@using Infrastructure.Interfaces
+@using MudBlazor
+@inject NavigationManager Navigation
+@inject IAuthorService Service
+@rendermode InteractiveServer
+
+<h3>Authors</h3>
+
+<div class="d-flex justify-content-end">
+    <button class="btn btn-primary mb-4" style="background-color: #4A3AFF" @onclick="NavigationToCreate">+ Add new
+    </button>
+</div>
+
+<div class="row">
+    @foreach (var author in authors)
+    {
+    <div class="col-md-3 mb-4">
+        <div class="card h-100 border-0 shadow rounded-4 pt-8">
+            <img class="card-img-top w-75 m-auto" alt="Author photo"
+                 src="https://media.licdn.com/dms/image/v2/D4E03AQG9RFd4rzCQWA/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1722158955520?e=2147483647&v=beta&t=8fgpcO0wNWkfHDJRUHORsxot_ivgQpHmIYO2YtxbA3Q"/>
+            <div class="card-body text-center">
+                <h5 class="card-title mb-1">@author.Name</h5>
+                <p class="text-muted mb-3">Age: @(DateTime.Now.Year - @author.BirthDate.Year)</p>
+                <div class="d-flex justify-content-center gap-2">
+                    <button @onclick="() => NavigateToEdit(author.Id)" class="btn btn-sm btn-outline-primary rounded-pill" style=" padding-right: 20px">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Medium"/>
+                        Edit
+                    </button>
+                    <button @onclick="() => NavigateToDelete(author.Id)" class="btn btn-sm btn-outline-danger rounded-pill" style=" padding-right: 20px">
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Medium"/>
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+</div>
+
+@code {
+    private List<GetAuthorDto> authors = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await Service.GetAuthorsAsync();
+        authors = response.Data!;
+    }
+
+    void NavigationToCreate()
+    {
+        Navigation.NavigateTo("/authors/create");
+    }
+
+    void NavigateToEdit(int id)
+    {
+        Navigation.NavigateTo($"/authors/edit/{id}");
+    }
+
+    void NavigateToDelete(int id)
+    {
+        Navigation.NavigateTo($"/authors/delete/{id}");
+    }
+
+}
